@@ -11,7 +11,8 @@ public class Monster extends Card{
     private int level; 
     private String atk; //ATK und DEF weil es ja ? ATK/DEF gibt...
     private String def = ""; 
-    private String pendText; 
+    private String pendGerText;
+    private String pendEngText; 
     private int pendScale = -1;//bei pendScale < 0 => kein Pendulum 
     private int linkMarkers; //Achtung, link rating bedient sich der "binary logic"
     /*Erklaerung: 
@@ -26,7 +27,7 @@ public class Monster extends Card{
         super(card);
     }
 
-    public Monster(Card card, String types, String atk_def, String level, String pendText, String pendScale, String linkMarkers){
+    public Monster(Card card, String types, String atk_def, String level, String pendEngText, String pendGerText, String pendScale, String linkMarkers){
         //Achtung, types ist ein simpler String der den Kartentyp(XYZ,Effect, etc.) 
         //als auch die Monstertypen(Dragon, Winged Beast, ...)
         //enthalten
@@ -36,7 +37,8 @@ public class Monster extends Card{
         this.setEffectTypes(EffectType.getEffectTypes(types));
         this.setATKDEF(atk_def); 
         if(level != null) this.setLevel(Integer.parseInt(level)); 
-        if(pendScale != null) this.setPendText(pendText);
+        if(pendScale != null) this.setEngPendText(pendEngText);
+        if(pendScale != null) this.setGerPendText(pendGerText);
         if(pendScale != null) this.setPendScale(Integer.parseInt(pendScale));
         if(linkMarkers != null) this.setLinkMarkers(linkMarkers);
     }
@@ -74,7 +76,7 @@ public class Monster extends Card{
             if(atk_def_list[1].equals("?")){
                 setDef("?");
             }else{
-                //Sonst testen wir zuvor ob es sich womöglich um ein Link Ratin handelt
+                //Sonst testen wir zuvor ob es sich womöglich um ein Link Rating handelt
                 int def_or_link = Integer.parseInt(atk_def_list[1]);
                 if(def_or_link > 99 || def_or_link == 0)
                     setDef(atk_def_list[1]);
@@ -100,12 +102,32 @@ public class Monster extends Card{
         return this.def;
     }
 
-    public void setPendText(String pendText){
-        this.pendText = pendText; 
+    public void setEngPendText(String pendEngText){
+        if(pendEngText != null){
+            //Wenn der Text einen doppelten/n-ten Linefeed hat auf einen Linefeed reduzieren
+            pendEngText = pendEngText.replaceAll("[\r\n]{2,}", "\n");
+            //Wenn der Text mit Linefeed startet oder endet, entfernen
+            pendEngText = pendEngText.replaceAll("^[\r\n]{1,}|[\r\n]{1,}$", "");
+        }
+        this.pendEngText = pendEngText; 
     }
 
-    public String getPendText(){
-        return this.pendText; 
+    public String getEngPendText(){
+        return this.pendEngText; 
+    }
+
+    public void setGerPendText(String pendGerText){
+        if(pendGerText != null){
+            //Wenn der Text einen doppelten/n-ten Linefeed hat auf einen Linefeed reduzieren
+            pendGerText = pendGerText.replaceAll("[\r\n]{2,}", "\n");
+            //Wenn der Text mit Linefeed startet oder endet, entfernen
+            pendGerText = pendGerText.replaceAll("^[\r\n]{1,}|[\r\n]{1,}$", "");
+        }
+        this.pendGerText = pendGerText; 
+    }
+
+    public String getGerPendText(){
+        return this.pendGerText; 
     }
 
     public void setPendScale(int pendScale){
@@ -154,12 +176,18 @@ public class Monster extends Card{
     @Override
     public JSONObject toJSON(){
         JSONObject card = super.toJSON();
-        card.put("MonsterType", this.getMonsterType());
-        card.put("EffectTypes", this.getEffectTypes());
+        card.put("MonsterType", this.getMonsterType().getType());
+        StringBuilder effectTypes = new StringBuilder("");
+        for(EffectType effect : this.getEffectTypes()){
+            effectTypes.append(effect.getType());
+            effectTypes.append(" ");
+        }
+        card.put("EffectTypes", effectTypes.toString());
         card.put("level", this.getLevel());
         card.put("atk", this.getAtk());
         card.put("def", this.getDef());
-        card.put("pendText", this.getPendText());
+        card.put("engPendText", this.getEngPendText());
+        card.put("gerPendText", this.getGerPendText());
         card.put("pendScale", this.getPendScale());//bei pendScale < 0 => kein Pendulum 
         card.put("linkMarkers", this.getLinkMarkers());
         //card.put("", );

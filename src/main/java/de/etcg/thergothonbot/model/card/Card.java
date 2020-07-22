@@ -3,16 +3,16 @@ package de.etcg.thergothonbot.model.card;
 import org.json.simple.JSONObject;
 
 public class Card{
-    private String nrId; //e.g. A00 von LEDD-ENA00
     private String setId; //e.g. LEDD von LEDD-ENA00
-
+    private String nrId; //e.g. A00 von LEDD-ENA00
+    
     private int etcgSetId; //Enthält die Id, welche in der CSE für die setId verwendet wird.
     
     private String engName; 
     private String gerName; 
     private String engText; 
     private String gerText; 
-    private String gba; //8-stelliger Kartencode, mit führenden Nullen deshalb string
+    private String gba = ""; //8-stelliger Kartencode, mit führenden Nullen deshalb string. Außerdem besitzen Skillcards keine GBA
 
     private RarityType rarity; 
 
@@ -55,6 +55,10 @@ public class Card{
         return this.setId + "-DE" + this.nrId; 
     }
 
+    public String getNrId(){
+        return this.nrId; 
+    }
+
     public void setEngName(String engName){
         this.engName = engName; 
     }
@@ -72,6 +76,12 @@ public class Card{
     }
 
     public void setGerText(String gerText){
+        if(gerText != null){
+            //Wenn der Text einen doppelten/n-ten Linefeed hat auf einen Linefeed reduzieren
+            gerText = gerText.replaceAll("[\r\n]{2,}", "\n");
+            //Wenn der Text mit Linefeed startet oder endet, entfernen
+            gerText = gerText.replaceAll("^[\r\n]{1,}|[\r\n]{1,}$", "");
+        } 
         this.gerText = gerText; 
     }
 
@@ -80,6 +90,12 @@ public class Card{
     }
 
     public void setEngText(String engText){
+        if(engText != null){
+            //Wenn der Text einen doppelten/n-ten Linefeed hat auf einen Linefeed reduzieren
+            engText = engText.replaceAll("[\r\n]{2,}", "\n");
+            //Wenn der Text mit Linefeed startet oder endet, entfernen
+            engText = engText.replaceAll("^[\r\n]{1,}|[\r\n]{1,}$", "");
+        }
         this.engText = engText; 
     }
 
@@ -120,9 +136,13 @@ public class Card{
         card.put("engName", this.getEngName());
         card.put("engText", this.getEngText());
         card.put("gba", this.getGBA());
-        card.put("rarity", this.rarity.getType());
-        card.put("CardType", this.type.getType());
+        card.put("rarity", this.getRarityType().getType());
+        card.put("CardType", this.getType().getType());
         //card.put("", );
         return card; 
+    }
+
+    public boolean isReprint(){
+        return this.getType().getType() < 0; 
     }
 }

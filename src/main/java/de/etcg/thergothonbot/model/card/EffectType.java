@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.ArrayList; 
 
 public enum EffectType{
-    EFFECT("EFFECT"), FUSION("FUSION"), RITUAL("RITUAL"),
-    SPIRIT("SPIRIT"), TOON("TOON"), UNION("UNION"),
-    GEMINI("GEMINI"), TUNER("TUNER"), SYNCHRO("SYNCHRO"),
-    XYZ("XYZ"), PENDULUM("PENDULUM"), LINK("LINK")
+    EFFECT("effect"), FUSION("fusion"), RITUAL("ritual"),
+    SPIRIT("spirit"), TOON("toon"), UNION("union"),
+    GEMINI("gemini"), TUNER("empfaenger"), SYNCHRO("synchro"),
+    XYZ("xyz"), PENDULUM("pendulum"), LINK("link")
     ;
 
     private String type; 
@@ -35,5 +35,16 @@ public enum EffectType{
 
     public String getType() {
        return this.type;
+    }
+
+    public static String[] listOfEffectTypes(){
+        String[] listofEffectTypes = {
+            "effect", "fusion", "ritual",
+            "spirit", "toon", "union",
+            "gemini", "empfaenger", "synchro",
+            "xyz", "link"
+            //"PENDULUM", //Pendulum nicht verarbeiten, da entsprechende Routine Pendulum manuell behandelt
+        };
+        return  listofEffectTypes; 
     }
 }

@@ -37,21 +37,35 @@ public class CardFactory{
     public Card buildCard(String id, int etcgId, String category, String engName, RarityType rarity, Element card_datas) throws IOException{
         Card card = new Card(id, etcgId);
         card.setEngName(engName);
+        //System.out.println("Neue Kartenname: " + engName);
         card.setRarityType(rarity);
 
         //Extradeckmonster haben in ihrer ersten Zeile ihre beschwoerungsbedingung.
         //ohne convertierung wird diese sonst in die Effekttextzeile geworfen
         card_datas.select("br").append("\n");
         
+        Element texts = card_datas.select("div.card-table-columns div.lore").get(0); 
+        String engPendText = null;
+        Elements texte = texts.select("dd"); //Texte aufteilen in Pendel und Monstereffekt
+        //Oder bei Skill Cards in Skill und nicht-Skill
+
         //Englischen Text holen
-        card.setEngText(card_datas.select("div.card-table-columns div.lore p").get(0).wholeText());
+        if(texts.text().contains("Pendulum Effect")){
+            engPendText = texte.get(0).wholeText(); 
+            card.setEngText(texte.get(1).wholeText());
+        }else if(texte.size() == 2){//Skill Cards haben 2 dd: 1. ist activation requirement(die wir nicht einbauen) und 2. ist Skill
+            card.setEngText(texte.get(1).wholeText());
+        }else{
+            card.setEngText(texts.wholeText());
+        }
+        
 
         //gba-code holen und parallel paar andere Dinge für später
         String monster_attributes = null; 
         String monster_types = null; 
         String atk_def = null; 
         String level = null; 
-        String pendText = null; 
+        String gerPendText = null; 
         String pendScale = null; 
         String linkMarkers = null; 
         Elements card_specific_datas = card_datas.select("div.infocolumn tr"); 
@@ -84,14 +98,14 @@ public class CardFactory{
         //System.out.println("Deutsche Texte: " + gerList.toString());
         card.setGerName(gerList.get(0).text()); 
         if(gerList.size() > 2){
-            pendText = gerList.get(1).text();
+            gerPendText = gerList.get(1).text();
             card.setGerText(gerList.get(2).wholeText());
         }else{
             card.setGerText(gerList.get(1).wholeText());
         }
         
         if(category.contains("MONSTER")){//Monster haben wieder Sonderbehandlung... igitt
-            card = new Monster(card, category + "_" + monster_types + "_"+ monster_attributes, atk_def, level, pendText, pendScale, linkMarkers);
+            card = new Monster(card, category + "_" + monster_types + "_"+ monster_attributes, atk_def, level, engPendText, gerPendText, pendScale, linkMarkers);
         }else{//Für alle nicht-Monster den einfachen "Search" benutzen
             card.setType(CardType.getCardType(category)); 
         }
@@ -119,7 +133,8 @@ public class CardFactory{
             monster.setLevel(((Long) obj.get("level")).intValue());
             monster.setAtk((String) obj.get("atk"));
             monster.setDef((String) obj.get("def"));
-            monster.setPendText((String) obj.get("pendText"));
+            monster.setEngPendText((String) obj.get("pendEngText"));
+            monster.setGerPendText((String) obj.get("pendGerText"));
             monster.setPendScale(((Long) obj.get("pendScale")).intValue());
             monster.setLinkMarkers(((Long) obj.get("linkMarkers")).intValue());
             card = monster; 
