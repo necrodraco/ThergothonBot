@@ -14,20 +14,13 @@ public class Monster extends Card{
     private String pendGerText;
     private String pendEngText; 
     private int pendScale = -1;//bei pendScale < 0 => kein Pendulum 
-    private int linkMarkers; //Achtung, link rating bedient sich der "binary logic"
-    /*Erklaerung: 
-        00000001;00000010;00000100
-        00001000;        ;00010000
-        00100000;01000000;10000000
-        Einfach die gesetzten Stellen aufaddieren und man hat so alle Link Ratings
-        z.b.: Link 2 mit Links-Oben(00000001) + Links(00001000) = 00001001
-    */
+    private List<LinkArrow> linkArrows; 
 
     public Monster(Card card){
         super(card);
     }
 
-    public Monster(Card card, String types, String atk_def, String level, String pendEngText, String pendGerText, String pendScale, String linkMarkers){
+    public Monster(Card card, String types, String atk_def, String level, String pendEngText, String pendGerText, String pendScale, String linkArrows){
         //Achtung, types ist ein simpler String der den Kartentyp(XYZ,Effect, etc.) 
         //als auch die Monstertypen(Dragon, Winged Beast, ...)
         //enthalten
@@ -40,7 +33,11 @@ public class Monster extends Card{
         if(pendScale != null) this.setEngPendText(pendEngText);
         if(pendScale != null) this.setGerPendText(pendGerText);
         if(pendScale != null) this.setPendScale(Integer.parseInt(pendScale));
-        if(linkMarkers != null) this.setLinkMarkers(linkMarkers);
+        if(linkArrows != null){
+            this.setLinkArrows(LinkArrow.getLinkArrows(linkArrows));
+        }else{
+            this.setLinkArrows(new ArrayList<LinkArrow>());
+        }
     }
 
     public void setMonsterType(MonsterType monsterType){
@@ -138,39 +135,12 @@ public class Monster extends Card{
         return this.pendScale; 
     }
 
-    public void setLinkMarkers(int linkMarkers){
-        this.linkMarkers = linkMarkers; 
+    public void setLinkArrows(List<LinkArrow> linkArrows){
+        this.linkArrows = linkArrows; 
     }
 
-    public void setLinkMarkers(String linkMarkers){
-        if(linkMarkers == null) return; 
-        int value = 0; 
-        String[] markers = linkMarkers.split(", ");
-        for(String marker : markers){
-            if(marker.equals("Top-Left")){ 
-                value += 1; 
-            }else if(marker.equals("Top")){ 
-                value += 10; 
-            }else if(marker.equals("Top-Right")){ 
-                value += 100; 
-            }else if(marker.equals("Left")){ 
-                value += 1000; 
-            }else if(marker.equals("Right")){ 
-                value += 10000; 
-            }else if(marker.equals("Bottom-Left")){ 
-                value += 100000; 
-            }else if(marker.equals("Bottom")){ 
-                value += 1000000; 
-            }else if(marker.equals("Bottom-Right")){ 
-                value += 10000000;
-            }
-        }
-        this.setLinkMarkers(value);
-
-    }
-
-    public int getLinkMarkers(){
-        return this.linkMarkers; 
+    public List<LinkArrow> getLinkArrows(){
+        return this.linkArrows; 
     }
 
     @Override
@@ -189,8 +159,39 @@ public class Monster extends Card{
         card.put("engPendText", this.getEngPendText());
         card.put("gerPendText", this.getGerPendText());
         card.put("pendScale", this.getPendScale());//bei pendScale < 0 => kein Pendulum 
-        card.put("linkMarkers", this.getLinkMarkers());
+        StringBuilder linkArrows = new StringBuilder("");
+        for(LinkArrow arrows : this.getLinkArrows()){
+            linkArrows.append(arrows.getType());
+            linkArrows.append(", ");
+        }
+        card.put("linkArrows", linkArrows.toString());
         //card.put("", );
         return card; 
+    }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder(super.toString());
+        sb.append("MonsterType: " + this.getMonsterType() + "\n");
+        sb.append("EffectTypen: " );
+        for(EffectType effect : this.getEffectTypes())
+            sb.append("" + effect + " ");
+        sb.append("\n");
+        sb.append("Level: " + this.getLevel() + "\n");
+        sb.append("atk: " + this.getAtk() + "\n");
+        sb.append("def: " + this.getDef() + "\n");
+        if(this.getPendScale() >= 0){
+        sb.append("deutscher Pendel-Effekt: " + this.getGerPendText() + "\n");
+        sb.append("englischer Pendel-Effekt: " + this.getEngPendText() + "\n");
+        sb.append("Pendel-Skala: " + this.getPendScale()); 
+        }
+        if(this.getLinkArrows().size() > 0){
+            sb.append("linkArrows: ");
+            for(LinkArrow arrows : this.getLinkArrows()){
+                sb.append("" + arrows + ", ");
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 }

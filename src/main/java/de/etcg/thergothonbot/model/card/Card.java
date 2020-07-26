@@ -51,10 +51,6 @@ public class Card{
         return this.etcgSetId; 
     }
 
-    public String getGerId(){
-        return this.setId + "-DE" + this.nrId; 
-    }
-
     public String getNrId(){
         return this.nrId; 
     }
@@ -144,5 +140,27 @@ public class Card{
 
     public boolean isReprint(){
         return this.getType().getType() < 0; 
+    }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder("Wird als neue Karte eingetragen: \n");
+        sb.append("id: " + this.getId() + "\n"); 
+        sb.append("deutscher Kartenname: " + this.getGerName() + "\n"); 
+        sb.append("deutscher EffektText: " + this.getGerText() + "\n"); 
+        sb.append("englischer Kartenname: " + this.getEngName() + "\n"); 
+        sb.append("englischer EffektText: " + this.getEngText() + "\n"); 
+        sb.append("GBA: " + this.getGBA() + "\n"); 
+        sb.append("Rarität: " + this.getRarityType() + "\n"); 
+        sb.append("Attribut: " + this.getType() + "\n"); 
+        return sb.toString();
+    }
+
+    public String toStringAsReprint(){
+        StringBuilder sb = new StringBuilder("Wird als Reprint eingetragen: \n");
+        sb.append("id: " + this.getId() + "\n"); 
+        sb.append("englischer Kartenname: " + this.getEngName() + "\n"); 
+        sb.append("Rarität: " + this.getRarityType() + "\n"); 
+        return sb.toString(); 
     }
 }

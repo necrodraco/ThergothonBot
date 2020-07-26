@@ -55,34 +55,29 @@ public class Reader{
                 RarityType rarity = RarityType.getRarityType(columns.get(2).select("a").get(0).text().toUpperCase()); 
 
                 //letzte Spalte: Reprint oder neue Karte
-                boolean reprint = true;
+                boolean reprint = false;
                 String category = null;   
                 //Schau nach ob es eine neue Karte oder ein Reprint ist
                 for(int i = 3; i < columns.size(); i++){
                   Element column = columns.get(i);
                   String text = column.text();
                   //System.out.println("Column of Card: " + column.toString());
-                  String textuc = text.toUpperCase();
+                  String textlc = text.toLowerCase();
                   if(
-                    textuc.contains("MONSTER") 
-                    || textuc.contains("SPELL") 
-                    || textuc.contains("TRAP")
-                    || textuc.contains("SKILL")
+                    textlc.contains("monster") 
+                    || textlc.contains("spell") 
+                    || textlc.contains("trap")
+                    || textlc.contains("skill")
                   )
-                    category = textuc; 
+                    category = textlc; 
 
-                  if(text.equals("New") || text.equals("Reprint") || text.equals("Speed Duel debut")){
-                      if(text.equals("New"))//Damit Speed Duel debut unter reprint fällt
-                          reprint = false; 
-                      break; 
-                  }
+                  if(text.equals("Reprint") || text.equals("Speed Duel debut"))
+                      reprint = true; 
                 }
-                if(reprint){ 
-                  cardList.add(cardFactory.buildCard(id, etcgId, engName, rarity));
-                }else{
+                if(category != null){
                   Document doc2 = Jsoup.connect(link).get();
                   Element card_datas = doc2.select("div#mw-content-text div.mw-parser-output").get(0); 
-                  cardList.add(cardFactory.buildCard(id, etcgId, category, engName, rarity, card_datas));
+                  cardList.add(cardFactory.buildCard(id, etcgId, category, engName, rarity, card_datas, reprint));
                 }
               }
             }
@@ -94,6 +89,7 @@ public class Reader{
     public void convertCardsToJSONFiles(){
       for(Card card : cardList){
         //Write JSON file
+        //System.out.println("Erzeugt Karte " + card.getEngName() + "mit NR: " + card.getId());
         try (FileWriter file = new FileWriter("./JSON/" + card.getId() + ".json")) {
           file.write(card.toJSON().toJSONString());
           file.flush();
@@ -101,5 +97,6 @@ public class Reader{
           e.printStackTrace();
         }
       }
+      cardList.clear();
     }
 }

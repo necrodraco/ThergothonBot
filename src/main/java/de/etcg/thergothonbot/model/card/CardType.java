@@ -1,28 +1,30 @@
 package de.etcg.thergothonbot.model.card;
 
 public enum CardType{
-    REPRINT(-1),//Keine spezifische ID, alle anderen IDs basieren auf den Value-Wert von Karten-Typ in ygo_card_add
-    MONSTER_EARTH(1), 
-    MONSTER_FIRE(2), 
-    MONSTER_DARK(3), 
-    MONSTER_LIGHT(4), 
-    MONSTER_WATER(5), 
-    MONSTER_WIND(6), 
-    MONSTER_GOD(16), 
-    SPELL_NORMAL(15), 
-    SPELL_EQUIP(7), 
-    SPELL_CONTINUOUS(8), 
-    SPELL_RITUAL(9), 
-    SPELL_QUICKPLAY(10), 
-    SPELL_FIELD(11),
-    TRAP_NORMAL(14),
-    TRAP_CONTINUOUS(13),
-    TRAP_COUNTER(12),
-    SKILL(17);
+    REPRINT("reprint", -1),//Keine spezifische ID, alle anderen IDs basieren auf den Value-Wert von Karten-Typ in ygo_card_add
+    MONSTER_EARTH("earth", 1), 
+    MONSTER_FIRE("fire", 2), 
+    MONSTER_DARK("dark", 3), 
+    MONSTER_LIGHT("light", 4), 
+    MONSTER_WATER("water", 5), 
+    MONSTER_WIND("wind", 6), 
+    MONSTER_GOD("god", 16), 
+    SPELL_NORMAL("normal spell", 15), 
+    SPELL_EQUIP("equip spell", 7), 
+    SPELL_CONTINUOUS("continuous spell", 8), 
+    SPELL_RITUAL("ritual spell", 9), 
+    SPELL_QUICKPLAY("quickplay spell", 10), 
+    SPELL_FIELD("fieldspell", 11),
+    TRAP_NORMAL("normal trap", 14),
+    TRAP_CONTINUOUS("continuous trap", 13),
+    TRAP_COUNTER("counter trap", 12),
+    SKILL("skill card", 17);
 
+    private String name; 
     private int type; 
 
-    private CardType(int type){
+    private CardType(String name, int type){
+        this.name = name; 
         this.type = type; 
     }
 
@@ -50,45 +52,45 @@ public enum CardType{
     }
 
     public static CardType getCardType(String type){
-        if(type.contains("MONSTER")){
-            if(type.contains("LIGHT")){
+        if(type.contains("monster")){
+            if(type.contains("light")){
                 return CardType.MONSTER_LIGHT;
-            }else if(type.contains("DARK")){
+            }else if(type.contains("dark")){
                 return CardType.MONSTER_DARK;
-            }else if(type.contains("FIRE")){
+            }else if(type.contains("fire")){
                 return CardType.MONSTER_FIRE;
-            }else if(type.contains("WATER")){
+            }else if(type.contains("water")){
                 return CardType.MONSTER_WATER;
-            }else if(type.contains("EARTH")){
+            }else if(type.contains("earth")){
                 return CardType.MONSTER_EARTH;
-            }else if(type.contains("WIND")){
+            }else if(type.contains("wind")){
                 return CardType.MONSTER_WIND;
             }else{
                 return CardType.MONSTER_GOD;
             }
-        }else if(type.contains("SPELL")){
-            if(type.contains("CONTINUOUS")){
+        }else if(type.contains("spell")){
+            if(type.contains("continuous")){
                 return CardType.SPELL_CONTINUOUS;
-            }else if(type.contains("EQUIP")){
+            }else if(type.contains("equip")){
                 return CardType.SPELL_EQUIP;
-            }else if(type.contains("RITUAL")){
+            }else if(type.contains("ritual")){
                 return CardType.SPELL_RITUAL;
-            }else if(type.contains("QUICKPLAY")){
+            }else if(type.contains("quickplay")){
                 return CardType.SPELL_QUICKPLAY;
-            }else if(type.contains("FIELD")){
+            }else if(type.contains("field")){
                 return CardType.SPELL_FIELD; 
             }else{
                 return CardType.SPELL_NORMAL;
             }
-        }else if(type.contains("TRAP")){
-            if(type.contains("CONTINUOUS")){
+        }else if(type.contains("trap")){
+            if(type.contains("continuous")){
                 return CardType.TRAP_CONTINUOUS;
-            }else if(type.contains("COUNTER")){
+            }else if(type.contains("counter")){
                 return CardType.TRAP_COUNTER;
             }else{
                 return CardType.TRAP_NORMAL;
             }
-        }else if(type.contains("SKILL")){
+        }else if(type.contains("skill")){
             return CardType.SKILL; 
         }
         return CardType.REPRINT; 
@@ -104,5 +106,10 @@ public enum CardType{
                 this.type >= 1 
                 && this.type <= 6
             ); 
+    }
+
+    @Override
+    public String toString(){
+        return this.name;
     }
 }

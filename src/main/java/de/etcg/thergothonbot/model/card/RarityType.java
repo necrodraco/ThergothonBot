@@ -1,26 +1,28 @@
 package de.etcg.thergothonbot.model.card;
 
 public enum RarityType{
-    SECRET_RARE(1), 
-    ULTRA_RARE(2), 
-    COMMON(3), 
-    SUPER_RARE(4), 
-    RARE(5), 
-    PARALLEL_RARE(6), 
-    GHOST_RARE(7), 
-    GOLD_RARE(8), 
-    ULTIMATE_RARE(9), 
-    STARFOIL(10), 
-    MOSAIC_RARE(11), 
-    GOLD_SECRET_RARE(12), 
-    SHATTERFOIL(13), 
-    PLATINUM_SECRET_RARE(14), 
-    PLATINUM_RARE(15)
+    SECRET_RARE("SECRET RARE", 1), 
+    ULTRA_RARE("ULTRA RARE", 2), 
+    COMMON("COMMON", 3), 
+    SUPER_RARE("SUPER RARE", 4), 
+    RARE("RARE", 5), 
+    PARALLEL_RARE("PARALLEL RARE", 6), 
+    GHOST_RARE("GHOST RARE", 7), 
+    GOLD_RARE("GOLD RARE", 8), 
+    ULTIMATE_RARE("ULTIMATE RARE", 9), 
+    STARFOIL("STARFOIL", 10), 
+    MOSAIC_RARE("MOSAIC RARE", 11), 
+    GOLD_SECRET_RARE("GOLD SECRET RARE", 12), 
+    SHATTERFOIL("SHATTERFOIL", 13), 
+    PLATINUM_SECRET_RARE("PLATINUM SECRET RARE", 14), 
+    PLATINUM_RARE("PLATINUM RARE", 15)
     ;
 
+    private String name; 
     private int type; 
 
-    private RarityType(int type){
+    private RarityType(String name, int type){
+        this.name = name; 
         this.type = type; 
     }
 
@@ -85,5 +87,10 @@ public enum RarityType{
 
     public int getType() {
        return this.type;
+    }
+
+    @Override
+    public String toString(){
+        return this.name;
     }
 }

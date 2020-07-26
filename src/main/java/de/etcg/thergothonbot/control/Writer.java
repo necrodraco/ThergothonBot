@@ -3,6 +3,7 @@ package de.etcg.thergothonbot.control;
 import de.etcg.thergothonbot.model.card.Card; 
 import de.etcg.thergothonbot.model.card.Monster;
 import de.etcg.thergothonbot.model.card.EffectType;
+import de.etcg.thergothonbot.model.card.LinkArrow; 
 
 import org.jsoup.Jsoup;
 import org.jsoup.Connection;
@@ -31,7 +32,7 @@ import java.io.FilenameFilter;
 import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.io.IOException; 
-import java.lang.InterruptedException; 
+//import java.lang.InterruptedException; 
 
 public class Writer{
     private static Writer writer; 
@@ -43,23 +44,27 @@ public class Writer{
     private Map<String, String> mapCookies;
 
     private String host; 
+    private Scanner sc; 
 
-    private Writer(){
+    private boolean skipReprintCheck; 
+
+    private Writer(Scanner sc){
         cardFactory = CardFactory.getInstance();
         jsonParser = new JSONParser();
         cardList = new ArrayList<Card>(); 
         mapRequest = new HashMap<String, String>(); 
         mapCookies = null; 
         host = "https://www.etcg.de"; 
+        this.sc = sc; 
     }
 
-    public static Writer getInstance(){
+    public static Writer getInstance(Scanner sc){
         if(writer == null)
-            writer = new Writer(); 
+            writer = new Writer(sc); 
         return writer; 
     }
 
-    public void write(){
+    public void readJSONToCard(){
         File directoryPath = new File("./JSON");
         FilenameFilter textFilefilter = new FilenameFilter(){
             public boolean accept(File dir, String name) {
@@ -73,8 +78,6 @@ public class Writer{
         };
         String filesList[] = directoryPath.list(textFilefilter);
         
-        handleLogin();
-            
         for(String fileName : filesList){
             try (FileReader reader = new FileReader("./JSON/" + fileName))
             {
@@ -88,152 +91,171 @@ public class Writer{
                 e.printStackTrace();
             }
         }
+    }
 
+    public void write(){
+        System.out.print("Handelt es sich um ein Set wo Rarity-Check nicht notwendig ist? ");
+        skipReprintCheck = confirmationOnly(); 
+        handleLogin();
+        
         for(Card card : cardList){
-            String cardName = card.getEngName();
-            System.out.println("Kartenname: " + cardName);
-            boolean sucessful = false; 
-            if(card.isReprint()){
-                mapRequest.put("cardsearch", card.getEngName());
-                
-                try{
-                    Document document = handlePostRequest(host + "/admin/ygo_card_index.php").parse();
-                    Elements printings = document.select("div.standard_content tr");
-                    String url = null; 
-                    boolean doublePrint = false; 
-                    //Wir durchsuchen alle Printings, und wenn ein Kartenname doppelt vorkommt, wird es nicht verarbeitet, und nur gemeldet
-                    for(int i = 1; i < printings.size(); i++){
-                        Elements printing_row = printings.get(i).select("td"); 
-                        if(printing_row.get(2).text().equals(cardName)){
-                            String link = printing_row.get(0).select("a").attr("abs:href");
-                            if(url != null){
-                                if(!doublePrint){
-                                    System.out.println("Doppelung gefunden für " + cardName + ": " + url);
-                                    doublePrint = true; 
-                                }
-                                System.out.println("Doppelung gefunden für " + cardName + ": " + link);
-                            }else{
-                                url = link;
-                            }
-                        }
-                    } 
-                    if(!doublePrint && url != null){
-                        mapRequest.put("en_edition_id", "" + card.getEtcgId());
-                        mapRequest.put("de_kuerzel", "DE");
-                        mapRequest.put("de_nummer", card.getNrId());
-                        mapRequest.put("de_edition_id", "" + card.getEtcgId());
-                        mapRequest.put("kuerzel", "EN");
-                        mapRequest.put("nummer", card.getNrId());
-                        mapRequest.put("ygo_rarity_id", "" + card.getRarityType().getType());
+            boolean sucessful = uploadCard(card); 
+            //System.out.println();
 
-                        handlePostRequest(url);
-                    }else if(!doublePrint){
-                        System.out.println("Keine Karte gefunden für " + cardName);
-                    }
-                }catch(IOException e){
-                    e.printStackTrace();
-                }
-            }else{
-                mapRequest.put("formsent", "1");
-                mapRequest.put("ygo_card_attribute_id", "" + card.getType().getType());
-                mapRequest.put("name", cardName);
-                mapRequest.put("de_name", card.getGerName());
-                mapRequest.put("beschreibung", card.getEngText());
-                mapRequest.put("de_beschreibung", card.getGerText());
-                mapRequest.put("gba", card.getGBA());
-                mapRequest.put("printing_ygo_rarity_id", "" + card.getRarityType().getType());
-                mapRequest.put("printing_en_edition_id", "" + card.getEtcgId());
-                mapRequest.put("printing_kuerzel", "EN");
-                mapRequest.put("printing_nummer", card.getNrId());
-                mapRequest.put("printing_de_edition_id", "" + card.getEtcgId());
-                mapRequest.put("printing_de_kuerzel", "DE");
-                mapRequest.put("printing_de_nummer", card.getNrId());
-                mapRequest.put("adv_list", "3");
-                mapRequest.put("tra_list", "3");
-
-                Map<String,Boolean> effectTypes = new HashMap<String, Boolean>();
-                if(card.getType().isMonster()){
-                    Monster monster = (Monster) card; 
-                    System.out.println("Ist Ein Monster: ");
-                    mapRequest.put("ygo_card_type_id", "" + monster.getMonsterType().getType());
-                    mapRequest.put("level", "" + monster.getLevel());
-                    mapRequest.put("atk", monster.getAtk());
-                    String def = monster.getDef();
-                    if(def != null ) mapRequest.put("def", def);
-                    for(EffectType type : monster.getEffectTypes()){
-                        effectTypes.put(type.getType().toLowerCase(), true);
-                    }
-                    if(monster.getPendScale() >= 0){
-                        mapRequest.put("pendelbereich", "" + monster.getPendScale());
-                        mapRequest.put("pendeleffekt", monster.getEngPendText());
-                        mapRequest.put("de_pendeleffekt", monster.getGerPendText());
-                    }else{
-                        mapRequest.put("pendelbereich", "-");
-                    }
-                    int link_marker = monster.getLinkMarkers();
-                    if(link_marker > 0){
-                        System.out.println("link_marker: " + link_marker);
-                        if(link_marker > 9999999){
-                            mapRequest.put("link_arrow_bottom_right", "1");
-                            link_marker -= 10000000;
-                        }
-                        if(link_marker > 999999){
-                            mapRequest.put("link_arrow_bottom", "1");
-                            link_marker -= 1000000;
-                        }
-                        if(link_marker > 99999){
-                            mapRequest.put("link_arrow_bottom_left", "1");
-                            link_marker -= 100000;
-                        }
-                        if(link_marker > 9999){
-                            mapRequest.put("link_arrow_right", "1");
-                            link_marker -= 10000;
-                        }
-                        if(link_marker > 999){
-                            mapRequest.put("link_arrow_left", "1");
-                            link_marker -= 1000;
-                        }
-                        if(link_marker > 99){
-                            mapRequest.put("link_arrow_top_right", "1");
-                            link_marker -= 100;
-                        }
-                        if(link_marker > 9){
-                            mapRequest.put("link_arrow_top", "1");
-                            link_marker -= 10;
-                        }
-                        if(link_marker > 0){
-                            mapRequest.put("link_arrow_top_left", "1");
-                        }
-                    }
-                }
-                for(String effect : EffectType.listOfEffectTypes()){
-                    if(effectTypes.containsKey(effect)){
-                        mapRequest.put(effect, "1");
-                    }else{    
-                        mapRequest.put(effect, "0");
-                    }
-                }
-                
-                for (Map.Entry<String, String> entry : mapRequest.entrySet()) {
-                    System.out.println(entry.getKey() + ":" + entry.getValue());
-                }
-                System.out.println();
-                
-                //Response resp = 
-                handlePostRequest(host+"/admin/ygo_card_add.php");
-                //System.out.println(resp.parse().body());
-                sucessful = true;
-                
-            }
             mapRequest.clear(); 
-            if(sucessful){
-                File file = new File("./JSON/" + card.getId() + ".json"); 
-                file.delete();
-            }
-            try{
-                TimeUnit.SECONDS.sleep(30);//Eine Verarbeitung alle 30 Sekunden, damit mich etcg nicht irgendwann sperrt
+            if(sucessful)
+                new File("./JSON/" + card.getId() + ".json").delete();
+            
+            /*try{
+                //Eine Verarbeitung alle 5 Sekunden, damit mich etcg nicht irgendwann sperrt
+                TimeUnit.SECONDS.sleep(5);
             }catch(InterruptedException e){
                 e.printStackTrace();
+            }*/
+        }
+        cardList.clear();
+    }
+
+    private boolean uploadCard(Card card){
+        if(card.isReprint()){
+            return uploadReprintCard(card);
+        }else{
+            return uploadNewCard(card);
+        }
+    }
+
+    private boolean uploadNewCard(Card card){
+        System.out.println(card.toString());
+        mapRequest.put("formsent", "1");
+        mapRequest.put("ygo_card_attribute_id", "" + card.getType().getType());
+        mapRequest.put("name", card.getEngName());
+        mapRequest.put("de_name", card.getGerName());
+        mapRequest.put("beschreibung", card.getEngText());
+        mapRequest.put("de_beschreibung", card.getGerText());
+        mapRequest.put("gba", card.getGBA());
+        mapRequest.put("printing_ygo_rarity_id", "" + card.getRarityType().getType());
+        mapRequest.put("printing_en_edition_id", "" + card.getEtcgId());
+        mapRequest.put("printing_kuerzel", "EN");
+        mapRequest.put("printing_nummer", card.getNrId());
+        mapRequest.put("printing_de_edition_id", "" + card.getEtcgId());
+        mapRequest.put("printing_de_kuerzel", "DE");
+        mapRequest.put("printing_de_nummer", card.getNrId());
+        mapRequest.put("adv_list", "3");
+        mapRequest.put("tra_list", "3");
+
+        Map<String,Boolean> effectTypes = new HashMap<String, Boolean>();
+        if(card.getType().isMonster()){
+            Monster monster = (Monster) card; 
+            
+            mapRequest.put("ygo_card_type_id", "" + monster.getMonsterType().getType());
+            int level = monster.getLevel(); 
+            if(level > 0){//Link Monster haben kein level und sonst würde Level 0 eingetragen werden
+                mapRequest.put("level", "" + level);
+            }else{
+                mapRequest.put("level", "");
+            }
+            mapRequest.put("atk", monster.getAtk());
+            String def = monster.getDef();
+            if(def != null ) mapRequest.put("def", def);
+            for(EffectType type : monster.getEffectTypes()){
+                effectTypes.put(type.getType().toLowerCase(), true);
+            }
+            if(monster.getPendScale() >= 0){
+                mapRequest.put("pendelbereich", "" + monster.getPendScale());
+                mapRequest.put("pendeleffekt", monster.getEngPendText());
+                mapRequest.put("de_pendeleffekt", monster.getGerPendText());
+            }else{
+                mapRequest.put("pendelbereich", "-");
+            }
+            for(LinkArrow linkArrow : monster.getLinkArrows()){
+                mapRequest.put(linkArrow.getType(), "1");
+            }
+        }else{
+            //Die ganz alten Parameter müssen gesetzt werden, 
+            //sonst wird wohl nicht verarbeitet bei ZFs und Skill Cards
+            mapRequest.put("ygo_card_type_id", "");
+            mapRequest.put("level", "");
+            mapRequest.put("atk", "");
+            mapRequest.put("def", "");
+        }
+        for(String effect : EffectType.listOfEffectTypes()){
+            if(effectTypes.containsKey(effect)){
+                mapRequest.put(effect, "1");
+            }else{    
+                mapRequest.put(effect, "0");
+            }
+        }
+        if(confirmation()){
+            handlePostRequest(host+"/admin/ygo_card_add.php");
+            return true;
+        }else{
+            return false; 
+        }
+    }
+
+    private boolean uploadReprintCard(Card card){
+        String cardName = card.getEngName(); 
+        mapRequest.put("cardsearch", cardName);
+            
+        try{
+            Document document = handlePostRequest(host + "/admin/ygo_card_index.php").parse();
+            Elements printings = document.select("div.standard_content tr");
+            String url = null; 
+            boolean doublePrint = false; 
+            //Wir durchsuchen alle Printings, und wenn ein Kartenname doppelt vorkommt, wird es nicht verarbeitet, und nur gemeldet
+            for(int i = 1; i < printings.size(); i++){
+                Elements printing_row = printings.get(i).select("td"); 
+                if(printing_row.get(2).text().equals(cardName)){
+                    String link = printing_row.get(0).select("a").attr("abs:href");
+                    if(url != null){
+                        if(!doublePrint){
+                            System.out.println("Doppelung gefunden für " + cardName + ": " + url);
+                            doublePrint = true; 
+                        }
+                        System.out.println("Doppelung gefunden für " + cardName + ": " + link);
+                    }else{
+                        url = link;
+                    }
+                }
+            } 
+            if(!doublePrint && url != null){
+                mapRequest.put("en_edition_id", "" + card.getEtcgId());
+                mapRequest.put("de_kuerzel", "DE");
+                mapRequest.put("de_nummer", card.getNrId());
+                mapRequest.put("de_edition_id", "" + card.getEtcgId());
+                mapRequest.put("kuerzel", "EN");
+                mapRequest.put("nummer", card.getNrId());
+                mapRequest.put("ygo_rarity_id", "" + card.getRarityType().getType());
+                if(!skipReprintCheck) System.out.println(card.toStringAsReprint());
+                if(skipReprintCheck || confirmation()){
+                    handlePostRequest(url);
+                    return true; 
+                }
+            }else if(!doublePrint){
+                //System.out.println(card.toStringAsReprint());
+                System.out.println("Keine Karte gefunden für " + cardName);
+            }
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+        return false; 
+    }
+
+    private boolean confirmation(){
+        System.out.println("Ist das Korrekt? J/n");
+        return confirmationOnly();
+    }
+
+    private boolean confirmationOnly(){
+        String answer;
+        while (true) {
+            answer = sc.nextLine().trim().toLowerCase();
+            if (answer.equals("") || answer.equals("y") || answer.equals("j")) {
+                return true;
+            } else if (answer.equals("n")) {
+                return false;
+            } else {
+                System.out.println("Eingabe nicht verstanden(Tippe Ja{J,Y oder keine Eingbae} oder Nein(N))");
             }
         }
     }
@@ -274,14 +296,12 @@ public class Writer{
                 e.printStackTrace();
             }
         }else{
-            Scanner scanner = new Scanner(System.in);
             System.out.println("Benutzernamen auf eTCG eingeben: ");
-            username = scanner.next();
+            username = sc.next();
             Console console = System.console();
             if(console != null){
               password = new String(console.readPassword("Passwort auf eTCG eingeben: "));
             }
-            scanner.close(); 
             
             mapRequest.put("login_nickname", username);  
             mapRequest.put("login_password", password);

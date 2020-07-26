@@ -1,35 +1,37 @@
 package de.etcg.thergothonbot.model.card;
 
 public enum MonsterType{
-    AQUA(1),
-    DINOSAUR(2),
-    THUNDER(3),
-    DRAGON(4),
-    FAIRY(5),
-    ROCK(6),
-    FISH(7),
-    WINGED_BEAST(8),
-    SPELLCASTER(9),
-    INSECT(10),
-    WARRIOR(11),
-    MACHINE(12),
-    PLANT(13),
-    PSYCHIC(14),
-    PYRO(15),
-    REPTILE(16),
-    SEA_SERPENT(17),
-    BEAST(18),
-    BEAST_WARRIOR(19),
-    FIEND(20),
-    ZOMBIE(21),
-    GOD(22),
-    WYRM(23),
-    CYBERSE(24)
+    AQUA("Aqua", 1),
+    DINOSAUR("Dinosaur", 2),
+    THUNDER("Thunder", 3),
+    DRAGON("Dragon", 4),
+    FAIRY("Fairy", 5),
+    ROCK("Rock", 6),
+    FISH("Fish", 7),
+    WINGED_BEAST("Winged Beast", 8),
+    SPELLCASTER("spellcaster", 9),
+    INSECT("Insect", 10),
+    WARRIOR("Warrior", 11),
+    MACHINE("Machine", 12),
+    PLANT("Plant", 13),
+    PSYCHIC("Psychic", 14),
+    PYRO("Pyro", 15),
+    REPTILE("Reptile", 16),
+    SEA_SERPENT("Sea Serpent", 17),
+    BEAST("Beast", 18),
+    BEAST_WARRIOR("Beast Warrior", 19),
+    FIEND("Fiend", 20),
+    ZOMBIE("Zombie", 21),
+    GOD("God", 22),
+    WYRM("Wyrm", 23),
+    CYBERSE("Cyberse: ", 24)
     ;
 
+    private String name; 
     private int type; 
 
-    private MonsterType(int type){
+    private MonsterType(String name, int type){
+        this.name = name; 
         this.type = type; 
     }
 
@@ -64,55 +66,55 @@ public enum MonsterType{
     }
 
     public static MonsterType getMonsterType(String type){
-        if(type.contains("AQUA")){
+        if(type.contains("aqua")){
             return MonsterType.AQUA;
-        }else if(type.contains("DINOSAUR")){
+        }else if(type.contains("dinosaur")){
             return MonsterType.DINOSAUR;
-        }else if(type.contains("THUNDER")){
+        }else if(type.contains("thunder")){
             return MonsterType.THUNDER;
-        }else if(type.contains("DRAGON")){
+        }else if(type.contains("dragon")){
             return MonsterType.DRAGON;
-        }else if(type.contains("FAIRY")){
+        }else if(type.contains("fairy")){
             return MonsterType.FAIRY;
-        }else if(type.contains("ROCK")){
+        }else if(type.contains("rock")){
             return MonsterType.ROCK;
-        }else if(type.contains("FISH")){
+        }else if(type.contains("fish")){
             return MonsterType.FISH;
-        }else if(type.contains("WINGED")){
+        }else if(type.contains("winged")){
             return MonsterType.WINGED_BEAST;
-        }else if(type.contains("SPELLCASTER")){
+        }else if(type.contains("spellcaster")){
             return MonsterType.SPELLCASTER;
-        }else if(type.contains("INSECT")){
+        }else if(type.contains("insect")){
             return MonsterType.INSECT;
-        }else if(type.contains("WARRIOR")){
-            if(type.contains("BEAST")){
+        }else if(type.contains("warrior")){
+            if(type.contains("beast")){
                 return MonsterType.BEAST_WARRIOR;
             }else{
                 return MonsterType.WARRIOR;
             }
-        }else if(type.contains("MACHINE")){
+        }else if(type.contains("machine")){
             return MonsterType.MACHINE;
-        }else if(type.contains("PLANT")){
+        }else if(type.contains("plant")){
             return MonsterType.PLANT;
-        }else if(type.contains("PSYCHIC")){
+        }else if(type.contains("psychic")){
             return MonsterType.PSYCHIC;
-        }else if(type.contains("PYRO")){
+        }else if(type.contains("pyro")){
             return MonsterType.PYRO;
-        }else if(type.contains("REPTILE")){
+        }else if(type.contains("reptile")){
             return MonsterType.REPTILE;
-        }else if(type.contains("SERPENT")){
+        }else if(type.contains("serpent")){
             return MonsterType.SEA_SERPENT;
-        }else if(type.contains("BEAST")){
+        }else if(type.contains("beast")){
             return MonsterType.BEAST;
-        }else if(type.contains("FIEND")){
+        }else if(type.contains("fiend")){
             return MonsterType.FIEND;
-        }else if(type.contains("ZOMBIE")){
+        }else if(type.contains("zombie")){
             return MonsterType.ZOMBIE;
-        }else if(type.contains("GOD")){
+        }else if(type.contains("god")){
             return MonsterType.GOD;
-        }else if(type.contains("WYRM")){
+        }else if(type.contains("wyrm")){
             return MonsterType.WYRM;
-        }else if(type.contains("CYBERSE")){
+        }else if(type.contains("cyberse")){
             return MonsterType.CYBERSE;
         }
         return null; 
@@ -120,5 +122,10 @@ public enum MonsterType{
 
     public int getType() {
        return this.type;
+    }
+
+    @Override
+    public String toString(){
+        return this.name;
     }
 }

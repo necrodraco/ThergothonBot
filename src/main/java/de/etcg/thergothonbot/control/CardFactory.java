@@ -5,7 +5,8 @@ import de.etcg.thergothonbot.model.card.Monster;
 import de.etcg.thergothonbot.model.card.CardType;
 import de.etcg.thergothonbot.model.card.MonsterType; 
 import de.etcg.thergothonbot.model.card.EffectType; 
-import de.etcg.thergothonbot.model.card.RarityType;  
+import de.etcg.thergothonbot.model.card.RarityType; 
+import de.etcg.thergothonbot.model.card.LinkArrow;  
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -26,15 +27,7 @@ public class CardFactory{
         return cardFactory; 
     }
 
-    public Card buildCard(String id, int etcgId, String engName, RarityType rarity){
-        Card card = new Card(id, etcgId);
-        card.setEngName(engName);
-        card.setRarityType(rarity);
-        card.setType(CardType.REPRINT);
-        return card;
-    }
-
-    public Card buildCard(String id, int etcgId, String category, String engName, RarityType rarity, Element card_datas) throws IOException{
+    public Card buildCard(String id, int etcgId, String category, String engName, RarityType rarity, Element card_datas, boolean reprint) throws IOException{
         Card card = new Card(id, etcgId);
         card.setEngName(engName);
         //System.out.println("Neue Kartenname: " + engName);
@@ -67,7 +60,7 @@ public class CardFactory{
         String level = null; 
         String gerPendText = null; 
         String pendScale = null; 
-        String linkMarkers = null; 
+        String linkArrows = null; 
         Elements card_specific_datas = card_datas.select("div.infocolumn tr"); 
         for(Element card_data : card_specific_datas){
             Elements headerColumn = card_data.select("th"); 
@@ -78,9 +71,9 @@ public class CardFactory{
                 if(header.equals("Password")){
                     card.setGBA(text);
                 }else if(header.equals("Attribute")){
-                    monster_attributes = text.toUpperCase();
-                }else if(header.equals("Types")){
-                    monster_types = text.toUpperCase();
+                    monster_attributes = text.toLowerCase();
+                }else if(header.equals("Type") || header.equals("Types")){
+                    monster_types = text.toLowerCase();
                 }else if(header.contains("ATK")){
                     atk_def = text; 
                 }else if(header.equals("Level") || header.equals("Rank")){
@@ -88,7 +81,7 @@ public class CardFactory{
                 }else if(header.equals("Pendulum Scale")){
                     pendScale = text; 
                 }else if(header.equals("Link Arrows")){
-                    linkMarkers = text; 
+                    linkArrows = text; 
                 }
             }
         }
@@ -104,11 +97,13 @@ public class CardFactory{
             card.setGerText(gerList.get(1).wholeText());
         }
         
-        if(category.contains("MONSTER")){//Monster haben wieder Sonderbehandlung... igitt
-            card = new Monster(card, category + "_" + monster_types + "_"+ monster_attributes, atk_def, level, engPendText, gerPendText, pendScale, linkMarkers);
+        if(category.contains("monster")){//Monster haben wieder Sonderbehandlung... igitt
+            card = new Monster(card, category + "_" + monster_types + "_"+ monster_attributes, atk_def, level, engPendText, gerPendText, pendScale, linkArrows);
         }else{//Für alle nicht-Monster den einfachen "Search" benutzen
             card.setType(CardType.getCardType(category)); 
         }
+        //System.out.println(card.getId()+" ist Reprint? " + reprint);
+        if(reprint) card.setType(CardType.REPRINT);
         return card; 
     }
 
@@ -133,10 +128,10 @@ public class CardFactory{
             monster.setLevel(((Long) obj.get("level")).intValue());
             monster.setAtk((String) obj.get("atk"));
             monster.setDef((String) obj.get("def"));
-            monster.setEngPendText((String) obj.get("pendEngText"));
-            monster.setGerPendText((String) obj.get("pendGerText"));
+            monster.setEngPendText((String) obj.get("engPendText"));
+            monster.setGerPendText((String) obj.get("gerPendText"));
             monster.setPendScale(((Long) obj.get("pendScale")).intValue());
-            monster.setLinkMarkers(((Long) obj.get("linkMarkers")).intValue());
+            monster.setLinkArrows(LinkArrow.getLinkArrows((String) obj.get("linkArrows")));
             card = monster; 
         }
         return card;
