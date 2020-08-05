@@ -1,3 +1,4 @@
-*.json
+*/*.json
+account.json
 *.class
 target

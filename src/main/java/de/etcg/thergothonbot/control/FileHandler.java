@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.ArrayList; 
 import java.util.Map;
 import java.util.HashMap;  
+import java.util.Iterator;
 
 import org.json.simple.JSONObject;
 
@@ -28,17 +29,17 @@ public class FileHandler{
 
     public static final String JSON = "./JSON"; 
     public static final String CHECKED = "./JSON_CHECKED"; 
+
     private static final String ACCOUNT = "account.json"; 
+    private static final String DOUBLES = "double.json";
 
     private JSONParser jsonParser; 
     private List<Card> cardList;
-    private File fileExist; 
-        
+       
     private FileHandler(){
         cardFactory = CardFactory.getInstance(); 
         jsonParser = new JSONParser();
         cardList = new ArrayList<Card>(); 
-        fileExist = new File(this.ACCOUNT);
         //Erstelle die Ordner, wenn sie nicht existieren 
         new File(FileHandler.JSON).mkdirs();
         new File(FileHandler.CHECKED).mkdirs();   
@@ -116,8 +117,8 @@ public class FileHandler{
     }
 
     public Map<String, String> readAccount(){
-        if(fileExist.exists()){
-            try (FileReader reader = new FileReader("account.json"))
+        if(new File(this.ACCOUNT).exists()){
+            try (FileReader reader = new FileReader(this.ACCOUNT))
             {
                 JSONObject obj = (JSONObject) jsonParser.parse(reader);
                 Map<String, String> mapCookies = new HashMap<String, String>();
@@ -144,6 +145,42 @@ public class FileHandler{
 
         try (FileWriter file = new FileWriter(this.ACCOUNT)) {
             file.write(account.toJSONString());
+            file.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Map<String, String> getDoubleList(){
+        Map<String, String> doubleList = new HashMap<String, String>();
+        if(new File(this.DOUBLES).exists()){
+            try (FileReader reader = new FileReader(this.DOUBLES))
+            {
+                JSONObject obj = (JSONObject) jsonParser.parse(reader);
+                for(Iterator iterator = obj.keySet().iterator(); iterator.hasNext();) {
+                    String key = (String) iterator.next();
+                    doubleList.put(key,(String) obj.get(key));
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        return doubleList;
+    }
+
+    public void addDoubleList(Map<String, String> doubleList){
+        new File(this.DOUBLES).delete();
+        JSONObject doubles = new JSONObject(); 
+        for(Map.Entry<String,String> entry : doubleList.entrySet()){
+            doubles.put(entry.getKey(), entry.getValue());
+        }
+        
+        try (FileWriter file = new FileWriter(this.DOUBLES)) {
+            file.write(doubles.toJSONString());
             file.flush();
         } catch (IOException e) {
             e.printStackTrace();

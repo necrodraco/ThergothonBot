@@ -6,6 +6,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import java.util.List; 
+import java.util.Map; 
 
 import java.io.IOException; 
 
@@ -32,11 +33,14 @@ public class Checker{
 
     public void startCheck(){
         cardList = fileHandler.readJSONToCard(fileHandler.JSON); 
+        Map<String, String> doubleList = fileHandler.getDoubleList();
         requestHandler.handleLogin();
         boolean skipReprintCheck = interactionHandler.askRarityCheck();              
+        boolean addedDouble = false; 
         for(Card card : cardList){
             if(card.isReprint()){
-                checkReprintCard(card, skipReprintCheck);
+                boolean temp = checkReprintCard(card, skipReprintCheck, doubleList);
+                if(temp) addedDouble = temp; 
             }else{
                 interactionHandler.printCard(card);
                 if(interactionHandler.confirmation()){
@@ -46,29 +50,35 @@ public class Checker{
                 }
             }
         }
-
+        if(addedDouble) fileHandler.addDoubleList(doubleList); 
         cardList.clear();
     }
 
-    private void checkReprintCard(Card card, boolean skipReprintCheck){
+    private boolean checkReprintCard(Card card, boolean skipReprintCheck, Map<String, String> doubleList){
         String cardName = card.getEngName(); 
-        requestHandler.addToRequest("cardsearch", cardName);
-            
+        boolean doubleAdded = false;     
         try{
-            Document document = requestHandler.handlePostRequest(requestHandler.HOST + "/admin/ygo_card_index.php").parse();
-            Elements printings = document.select("div.standard_content tr");
-            //Wir durchsuchen alle Printings, und wenn ein Kartenname doppelt vorkommt, wird es nicht verarbeitet, und nur gemeldet
-            for(int i = 1; i < printings.size(); i++){
-                Elements printing_row = printings.get(i).select("td"); 
-                if(printing_row.get(2).text().equals(cardName)){
-                    String link = printing_row.get(0).select("a").attr("abs:href");
-                    if(card.getReprintURL() != null){
-                        interactionHandler.doubleFound(card, link);
-                    }else{
-                        card.setReprintURL(link);
+            if(doubleList.containsKey(cardName)){
+                card.setReprintURL(doubleList.get(cardName));
+            }else{
+                requestHandler.addToRequest("cardsearch", cardName);
+                Document document = requestHandler.handlePostRequest(requestHandler.HOST + "/admin/ygo_card_index.php").parse();
+                Elements printings = document.select("div.standard_content tr");
+                //Wir durchsuchen alle Printings, und wenn ein Kartenname doppelt vorkommt, wird es nicht verarbeitet, und nur gemeldet
+                for(int i = 1; i < printings.size(); i++){
+                    Elements printing_row = printings.get(i).select("td"); 
+                    if(printing_row.get(2).text().equals(cardName)){
+                        String link = printing_row.get(0).select("a").attr("abs:href");
+                        if(card.getReprintURL() != null){
+                            interactionHandler.doubleFound(card, link);
+                            doubleList.put(cardName, card.getReprintURL());
+                            doubleAdded = true; 
+                        }else{
+                            card.setReprintURL(link);
+                        }
                     }
-                }
-            } 
+                } 
+            }
             if(card.getReprintURL() != null){
                 if(!skipReprintCheck) interactionHandler.printCard(card);
                 if(!skipReprintCheck && interactionHandler.confirmation()){
@@ -86,6 +96,7 @@ public class Checker{
             }
         }catch(IOException e){
             e.printStackTrace();
-        } 
+        }
+        return doubleAdded;  
     }
 }
