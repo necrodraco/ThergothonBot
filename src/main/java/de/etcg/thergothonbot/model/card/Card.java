@@ -7,7 +7,9 @@ public class Card{
     private String nrId; //e.g. A00 von LEDD-ENA00
     
     private int etcgSetId; //Enthält die Id, welche in der CSE für die setId verwendet wird.
-    
+    private boolean reprint; 
+    private String reprintUrl; //Wenn es sich um einen Reprint handelt, wird dieses Feld gesetzt und entsprechend an diese URL angefragt; 
+
     private String engName; 
     private String gerName; 
     private String engText; 
@@ -25,9 +27,11 @@ public class Card{
 
     //Copy-Constructor
     protected Card(Card card){
-        this.nrId = card.nrId; 
         this.setId = card.setId; 
+        this.nrId = card.nrId; 
         this.etcgSetId = card.etcgSetId; 
+        this.reprint = card.reprint;
+        this.reprintUrl = card.reprintUrl;
         this.engName = card.engName;  
         this.gerName = card.gerName;  
         this.engText = card.engText;  
@@ -127,6 +131,9 @@ public class Card{
         JSONObject card = new JSONObject();
         card.put("id", this.getId());
         card.put("etcgId", this.getEtcgId());
+        card.put("reprint", this.isReprint()); 
+        card.put("reprintURL",this.getReprintURL()); //Wenn es sich um einen Reprint handelt, wird dieses Feld gesetzt und entsprechend an diese URL angefragt; 
+
         card.put("gerName", this.getGerName());
         card.put("gerText", this.getGerText());
         card.put("engName", this.getEngName());
@@ -134,33 +141,52 @@ public class Card{
         card.put("gba", this.getGBA());
         card.put("rarity", this.getRarityType().getType());
         card.put("CardType", this.getType().getType());
-        //card.put("", );
         return card; 
     }
 
+    public void setReprint(boolean reprint){
+        this.reprint = reprint; 
+    }
+
+    public void setReprintURL(String url){
+        if(url != null && url.length() > 0){
+            this.setReprint(true);
+            this.reprintUrl = url; 
+        }
+    }
+
+    public String getReprintURL(){
+        if(this.isReprint())
+            return this.reprintUrl;
+        return null; 
+    }
+
     public boolean isReprint(){
-        return this.getType().getType() < 0; 
+        return this.reprint; 
+    }
+
+    public boolean isMonster(){
+        System.out.println(this.getEngName() + " ist ein monster? " + this.getType());
+        return this.getType().isMonster();
     }
 
     @Override
     public String toString(){
-        StringBuilder sb = new StringBuilder("Wird als neue Karte eingetragen: \n");
+        StringBuilder sb = new StringBuilder("\n");
+        boolean reprint = this.isReprint();
+        sb.append("Reprint: " + reprint + "\n");
         sb.append("id: " + this.getId() + "\n"); 
-        sb.append("deutscher Kartenname: " + this.getGerName() + "\n"); 
-        sb.append("deutscher EffektText: " + this.getGerText() + "\n"); 
         sb.append("englischer Kartenname: " + this.getEngName() + "\n"); 
-        sb.append("englischer EffektText: " + this.getEngText() + "\n"); 
-        sb.append("GBA: " + this.getGBA() + "\n"); 
         sb.append("Rarität: " + this.getRarityType() + "\n"); 
-        sb.append("Attribut: " + this.getType() + "\n"); 
+        if(reprint){
+            sb.append("Reprint-URL: " + this.getReprintURL()+"\n");
+        }else{   
+            sb.append("deutscher Kartenname: " + this.getGerName() + "\n"); 
+            sb.append("deutscher EffektText: " + this.getGerText() + "\n"); 
+            sb.append("englischer EffektText: " + this.getEngText() + "\n"); 
+            sb.append("GBA: " + this.getGBA() + "\n"); 
+            sb.append("Attribut: " + this.getType() + "\n"); 
+        }
         return sb.toString();
-    }
-
-    public String toStringAsReprint(){
-        StringBuilder sb = new StringBuilder("Wird als Reprint eingetragen: \n");
-        sb.append("id: " + this.getId() + "\n"); 
-        sb.append("englischer Kartenname: " + this.getEngName() + "\n"); 
-        sb.append("Rarität: " + this.getRarityType() + "\n"); 
-        return sb.toString(); 
     }
 }

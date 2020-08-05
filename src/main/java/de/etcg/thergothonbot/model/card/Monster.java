@@ -65,7 +65,6 @@ public class Monster extends Card{
     }
 
     public void setATKDEF(String atk_def){
-        //System.out.println("ATKDEF: " + atk_def);
         String[] atk_def_list = atk_def.split(" / ");
         this.setAtk(atk_def_list[0]);
         if(atk_def_list.length > 1){
@@ -172,25 +171,27 @@ public class Monster extends Card{
     @Override
     public String toString(){
         StringBuilder sb = new StringBuilder(super.toString());
-        sb.append("MonsterType: " + this.getMonsterType() + "\n");
-        sb.append("EffectTypen: " );
-        for(EffectType effect : this.getEffectTypes())
-            sb.append("" + effect + " ");
-        sb.append("\n");
-        sb.append("Level: " + this.getLevel() + "\n");
-        sb.append("atk: " + this.getAtk() + "\n");
-        sb.append("def: " + this.getDef() + "\n");
-        if(this.getPendScale() >= 0){
-        sb.append("deutscher Pendel-Effekt: " + this.getGerPendText() + "\n");
-        sb.append("englischer Pendel-Effekt: " + this.getEngPendText() + "\n");
-        sb.append("Pendel-Skala: " + this.getPendScale()); 
-        }
-        if(this.getLinkArrows().size() > 0){
-            sb.append("linkArrows: ");
-            for(LinkArrow arrows : this.getLinkArrows()){
-                sb.append("" + arrows + ", ");
-            }
+        if(!this.isReprint()){
+            sb.append("MonsterType: " + this.getMonsterType() + "\n");
+            sb.append("EffectTypen: " );
+            for(EffectType effect : this.getEffectTypes())
+                sb.append("" + effect + " ");
             sb.append("\n");
+            sb.append("Level: " + this.getLevel() + "\n");
+            sb.append("atk: " + this.getAtk() + "\n");
+            sb.append("def: " + this.getDef() + "\n");
+            if(this.getPendScale() >= 0){
+            sb.append("deutscher Pendel-Effekt: " + this.getGerPendText() + "\n");
+            sb.append("englischer Pendel-Effekt: " + this.getEngPendText() + "\n");
+            sb.append("Pendel-Skala: " + this.getPendScale()); 
+            }
+            if(this.getLinkArrows().size() > 0){
+                sb.append("linkArrows: ");
+                for(LinkArrow arrows : this.getLinkArrows()){
+                    sb.append("" + arrows + ", ");
+                }
+                sb.append("\n");
+            }
         }
         return sb.toString();
     }

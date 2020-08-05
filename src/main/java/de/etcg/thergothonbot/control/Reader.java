@@ -1,21 +1,14 @@
 package de.etcg.thergothonbot.control;
 
-import de.etcg.thergothonbot.model.card.Card; 
+//import de.etcg.thergothonbot.model.card.Card; 
 import de.etcg.thergothonbot.model.card.RarityType; 
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
-import java.io.FileWriter;
-import java.io.IOException;
  
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
-import java.util.List; 
-import java.util.ArrayList; 
+//import java.util.List; 
+//import java.util.ArrayList; 
 
 import java.io.IOException; 
 
@@ -23,10 +16,15 @@ public class Reader{
     
     private static Reader reader; 
     private CardFactory cardFactory; 
-    private List<Card> cardList = new ArrayList<Card>();
-
+    private FileHandler fileHandler; 
+    private RequestHandler requestHandler; 
+    private InteractionHandler interactionHandler; 
+    
     private Reader(){
-      cardFactory = CardFactory.getInstance();
+        cardFactory = CardFactory.getInstance();
+        fileHandler = FileHandler.getInstance(); 
+        requestHandler = RequestHandler.getInstance();
+        interactionHandler = InteractionHandler.getInstance();
     }
 
     public static Reader getInstance(){
@@ -35,14 +33,13 @@ public class Reader{
       return reader; 
     }
 
-    public void read(int etcgId, String url){
-        System.out.println( "Liest: " + url );
+    public void read(){
+        String url = interactionHandler.askURL();
+        int etcgId = interactionHandler.askEtcgId();
         try{
-            Document doc = Jsoup.connect(url).get();
-            //System.out.println("Doc-result" + doc.toString());
+            Document doc = requestHandler.getRequest(url);
             Elements tablerows = doc.select("div.tabbertab tr");
             for (Element row : tablerows) {
-              //System.out.println("Row of Card: " + row.toString());
               Elements columns = row.select("td");
               if(columns.size() > 0){
                 //Erste Spalte: ID der Karte im Pack
@@ -59,9 +56,7 @@ public class Reader{
                 String category = null;   
                 //Schau nach ob es eine neue Karte oder ein Reprint ist
                 for(int i = 3; i < columns.size(); i++){
-                  Element column = columns.get(i);
-                  String text = column.text();
-                  //System.out.println("Column of Card: " + column.toString());
+                  String text = columns.get(i).text();
                   String textlc = text.toLowerCase();
                   if(
                     textlc.contains("monster") 
@@ -71,32 +66,24 @@ public class Reader{
                   )
                     category = textlc; 
 
-                  if(text.equals("Reprint") || text.equals("Speed Duel debut"))
-                      reprint = true; 
+                  if(text.equals("Reprint") || text.equals("Speed Duel debut") || text.equals("Functional errata")){
+                    if(text.equals("Functional errata")) 
+                      interactionHandler.warnErrata(id, engName); //Bei Errata, wo der Effekt hart verändert wird, warnen
+                    reprint = true;
+                  }
                 }
                 if(category != null){
-                  Document doc2 = Jsoup.connect(link).get();
+                  Document doc2 = requestHandler.getRequest(link);
                   Element card_datas = doc2.select("div#mw-content-text div.mw-parser-output").get(0); 
-                  cardList.add(cardFactory.buildCard(id, etcgId, category, engName, rarity, card_datas, reprint));
+                  fileHandler.addCard(cardFactory.buildCard(id, etcgId, category, engName, rarity, card_datas, reprint));
+                }else{
+                  interactionHandler.errorNoCategoryFound(); 
                 }
               }
             }
         } catch(IOException e) {
-            System.out.println("Fehler beim einlesen der Website " + url);
+            interactionHandler.errorUrlReadFailure(url);
         }
-    }
-
-    public void convertCardsToJSONFiles(){
-      for(Card card : cardList){
-        //Write JSON file
-        //System.out.println("Erzeugt Karte " + card.getEngName() + "mit NR: " + card.getId());
-        try (FileWriter file = new FileWriter("./JSON/" + card.getId() + ".json")) {
-          file.write(card.toJSON().toJSONString());
-          file.flush();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
-      cardList.clear();
+        fileHandler.convertCardsToJSONFiles();    
     }
 }

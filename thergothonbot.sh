@@ -14,5 +14,4 @@ then
     mvn dependency:copy-dependencies -DoutputDirectory=${dir}/libs
 fi
 
-mkdir -p JSON
 java -cp ${dir}/libs/*:${dir}/${jar_name}-1.0-SNAPSHOT.jar ${app}

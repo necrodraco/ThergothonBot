@@ -1,7 +1,6 @@
 package de.etcg.thergothonbot.model.card;
 
 public enum CardType{
-    REPRINT("reprint", -1),//Keine spezifische ID, alle anderen IDs basieren auf den Value-Wert von Karten-Typ in ygo_card_add
     MONSTER_EARTH("earth", 1), 
     MONSTER_FIRE("fire", 2), 
     MONSTER_DARK("dark", 3), 
@@ -47,7 +46,7 @@ public enum CardType{
             case 13: return CardType.TRAP_CONTINUOUS;
             case 12: return CardType.TRAP_COUNTER;
             case 17: return CardType.SKILL;
-            default: return CardType.REPRINT; 
+            default: return CardType.MONSTER_EARTH; 
         }
     }
 
@@ -93,7 +92,7 @@ public enum CardType{
         }else if(type.contains("skill")){
             return CardType.SKILL; 
         }
-        return CardType.REPRINT; 
+        return CardType.MONSTER_EARTH; 
     }
 
     public int getType() {

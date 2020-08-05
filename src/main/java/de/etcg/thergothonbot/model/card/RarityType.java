@@ -80,6 +80,8 @@ public enum RarityType{
             return RarityType.MOSAIC_RARE; 
         }else if(type.contains("SHATTERFOIL")){
             return RarityType.SHATTERFOIL; 
+        }else if(type.contains("Short Print")){
+            return RarityType.COMMON; 
         }else{//Default Rare
             return RarityType.RARE;
         }

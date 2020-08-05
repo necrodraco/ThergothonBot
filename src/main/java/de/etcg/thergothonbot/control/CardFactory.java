@@ -10,7 +10,6 @@ import de.etcg.thergothonbot.model.card.LinkArrow;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
@@ -30,7 +29,6 @@ public class CardFactory{
     public Card buildCard(String id, int etcgId, String category, String engName, RarityType rarity, Element card_datas, boolean reprint) throws IOException{
         Card card = new Card(id, etcgId);
         card.setEngName(engName);
-        //System.out.println("Neue Kartenname: " + engName);
         card.setRarityType(rarity);
 
         //Extradeckmonster haben in ihrer ersten Zeile ihre beschwoerungsbedingung.
@@ -52,7 +50,6 @@ public class CardFactory{
             card.setEngText(texts.wholeText());
         }
         
-
         //gba-code holen und parallel paar andere Dinge für später
         String monster_attributes = null; 
         String monster_types = null; 
@@ -67,14 +64,13 @@ public class CardFactory{
             if(headerColumn.size() > 0){
                 String header = headerColumn.get(0).text(); 
                 String text = card_data.select("td").get(0).text();
-                //System.out.println("Header: " + header + "\nText: " + text);
                 if(header.equals("Password")){
                     card.setGBA(text);
                 }else if(header.equals("Attribute")){
                     monster_attributes = text.toLowerCase();
                 }else if(header.equals("Type") || header.equals("Types")){
                     monster_types = text.toLowerCase();
-                }else if(header.contains("ATK")){
+                }else if(header.equals("ATK / DEF") || header.equals("ATK / LINK")){
                     atk_def = text; 
                 }else if(header.equals("Level") || header.equals("Rank")){
                     level = text; 
@@ -88,7 +84,6 @@ public class CardFactory{
 
         //Deutschen Namen und Text holen
         Elements gerList = card_datas.select("table.wikitable tr td[lang=de]");
-        //System.out.println("Deutsche Texte: " + gerList.toString());
         card.setGerName(gerList.get(0).text()); 
         if(gerList.size() > 2){
             gerPendText = gerList.get(1).text();
@@ -102,8 +97,7 @@ public class CardFactory{
         }else{//Für alle nicht-Monster den einfachen "Search" benutzen
             card.setType(CardType.getCardType(category)); 
         }
-        //System.out.println(card.getId()+" ist Reprint? " + reprint);
-        if(reprint) card.setType(CardType.REPRINT);
+        card.setReprint(reprint);
         return card; 
     }
 
@@ -111,7 +105,8 @@ public class CardFactory{
         String id = (String) obj.get("id");
         int etcgId = ((Long) obj.get("etcgId")).intValue();
         Card card = new Card(id, etcgId);
-        
+        card.setReprintURL((String) obj.get("reprintURL"));
+        card.setReprint(((Boolean) obj.get("reprint")).booleanValue());
         card.setGerName((String) obj.get("gerName"));
         card.setGerText((String) obj.get("gerText")); 
         card.setEngName((String) obj.get("engName"));
