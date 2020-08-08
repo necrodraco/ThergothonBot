@@ -12,7 +12,7 @@ public enum CardType{
     SPELL_EQUIP("equip spell", 7), 
     SPELL_CONTINUOUS("continuous spell", 8), 
     SPELL_RITUAL("ritual spell", 9), 
-    SPELL_QUICKPLAY("quickplay spell", 10), 
+    SPELL_QUICKPLAY("quick-play spell", 10), 
     SPELL_FIELD("fieldspell", 11),
     TRAP_NORMAL("normal trap", 14),
     TRAP_CONTINUOUS("continuous trap", 13),
@@ -74,7 +74,7 @@ public enum CardType{
                 return CardType.SPELL_EQUIP;
             }else if(type.contains("ritual")){
                 return CardType.SPELL_RITUAL;
-            }else if(type.contains("quickplay")){
+            }else if(type.contains("quick-play")){
                 return CardType.SPELL_QUICKPLAY;
             }else if(type.contains("field")){
                 return CardType.SPELL_FIELD; 
