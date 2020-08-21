@@ -39,9 +39,13 @@ public class Reader{
         try{
             Document doc = requestHandler.getRequest(url);
             Elements tablerows = doc.select("div.tabbertab tr");
-            for (Element row : tablerows) {
+            cards: for (Element row : tablerows) {
               Elements columns = row.select("td");
               if(columns.size() > 0){
+                //wenn die erste Spalte keinen Link enthält, wird übersprungen
+                if(columns.get(0).select("a").size() == 0)
+                    continue cards;
+
                 //Erste Spalte: ID der Karte im Pack
                 String id = columns.get(0).select("a").get(0).text();
                 String link = columns.get(0).select("a").get(0).attr("abs:href"); 
@@ -65,6 +69,8 @@ public class Reader{
                     || textlc.contains("skill")
                   )
                     category = textlc; 
+                  if(textlc.equals("ticket card") || textlc.equals("token"))
+                    continue cards;
 
                   if(text.equals("Reprint") || text.equals("Speed Duel debut") || text.equals("Functional errata")){
                     if(text.equals("Functional errata")) 

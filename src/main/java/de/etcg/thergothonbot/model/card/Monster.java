@@ -71,6 +71,8 @@ public class Monster extends Card{
             //Wenn ? DEF, dann blind übernehmen
             if(atk_def_list[1].equals("?")){
                 setDef("?");
+            }else if(atk_def_list[1].equals("X000")){
+                setDef("X000");
             }else{
                 //Sonst testen wir zuvor ob es sich womöglich um ein Link Rating handelt
                 int def_or_link = Integer.parseInt(atk_def_list[1]);
