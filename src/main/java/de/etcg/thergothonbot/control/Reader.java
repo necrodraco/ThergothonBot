@@ -49,6 +49,7 @@ public class Reader{
                 //Erste Spalte: ID der Karte im Pack
                 String id = columns.get(0).select("a").get(0).text();
                 String link = columns.get(0).select("a").get(0).attr("abs:href"); 
+                String link2 = columns.get(1).select("a").get(0).attr("abs:href");
                 //Zweite Spalte: Name der Karte
                 String engName = columns.get(1).select("a").get(0).text();
 
@@ -80,6 +81,8 @@ public class Reader{
                 }
                 if(category != null){
                   Document doc2 = requestHandler.getRequest(link);
+                  if(doc2 == null)//Wenn der ID-Link noch nicht geht, nehme stattdessen den Link des Kartennamens
+                    doc2 = requestHandler.getRequest(link2);
                   Element card_datas = doc2.select("div#mw-content-text div.mw-parser-output").get(0); 
                   fileHandler.addCard(cardFactory.buildCard(id, etcgId, category, engName, rarity, card_datas, reprint));
                 }else{
